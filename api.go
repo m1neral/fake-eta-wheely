@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+// mockgen -source=api.go -destination api_mock.go -package eta
+
 type ApiRequester interface {
 	FetchCarPositions(position Position, limit int) ([]Position, error)
 	FetchEtas(position Position, carsPositions []Position) ([]Eta, error)
