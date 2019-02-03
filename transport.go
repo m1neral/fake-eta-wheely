@@ -78,8 +78,6 @@ func validatedParams(r *http.Request) (float64, float64, error) {
 
 func handleError(w http.ResponseWriter, err error) {
 	switch err {
-	case ErrFetchCarsPositions, ErrFetchEtas:
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	case ErrValidatedParams:
 		errMsg := fmt.Sprintf(
 			"Passed params are incorrect: lat is required and value should be from %v to %v; lng is required and value should be from %v to %v",
@@ -87,6 +85,10 @@ func handleError(w http.ResponseWriter, err error) {
 			minLng, maxLng,
 		)
 		http.Error(w, errMsg, http.StatusUnprocessableEntity)
+	case ErrFetchCarsPositions, ErrFetchEtas:
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+	case ErrEmptyCarsPositions, ErrEmptyEtas:
+		http.Error(w, err.Error(), http.StatusNotFound)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

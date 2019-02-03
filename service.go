@@ -10,8 +10,10 @@ type EtaService struct {
 }
 
 var (
-	ErrFetchCarsPositions = errors.New("couldn't fetch car positions")
+	ErrFetchCarsPositions = errors.New("couldn't fetch cars positions")
+	ErrEmptyCarsPositions = errors.New("empty cars positions")
 	ErrFetchEtas          = errors.New("couldn't fetch etas")
+	ErrEmptyEtas          = errors.New("empty etas")
 	ErrInternal           = errors.New("couldn't detect min ETA")
 )
 
@@ -28,10 +30,16 @@ func (s *EtaService) FindMinEta(targetPosition Position) (Eta, error) {
 	if err != nil {
 		return 0, err
 	}
+	if len(positions) == 0 {
+		return 0, ErrEmptyCarsPositions
+	}
 
 	etas, err := s.getEtas(targetPosition, positions)
 	if err != nil {
 		return 0, err
+	}
+	if len(etas) == 0 {
+		return 0, ErrEmptyEtas
 	}
 
 	minEta, err := s.min(etas)
