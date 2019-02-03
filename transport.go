@@ -86,9 +86,9 @@ func handleError(w http.ResponseWriter, err error) {
 		)
 		http.Error(w, errMsg, http.StatusUnprocessableEntity)
 	case ErrFetchCarsPositions, ErrFetchEtas:
-		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	case ErrEmptyCarsPositions, ErrEmptyEtas:
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
