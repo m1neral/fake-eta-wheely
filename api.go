@@ -1,5 +1,14 @@
 package main
 
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strconv"
+)
+
 type FetchCarPositionsResponse struct {
 	Positions []Position
 }
@@ -31,7 +40,36 @@ func NewApiRequestService() *ApiRequestService {
 }
 
 func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (FetchCarPositionsResponse, error) {
-	return FetchCarPositionsResponse{}, nil
+	positions := FetchCarPositionsResponse{}
+
+	url, err := url.Parse(carPositionsEndpointURL)
+	if err != nil {
+		return positions, err
+	}
+
+	query := url.Query()
+	query.Set("limit", strconv.Itoa(carPositionsLimit))
+	query.Set("lat", fmt.Sprintf("%f", lat))
+	query.Set("lng", fmt.Sprintf("%f", lng))
+
+	url.RawQuery = query.Encode()
+
+	resp, err := http.Get(url.String())
+	if err != nil {
+		return positions, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return positions, err
+	}
+
+	err = json.Unmarshal(body, &positions.Positions)
+	if err != nil {
+		return positions, err
+	}
+
+	return positions, nil
 }
 
 func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error) {
