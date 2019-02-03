@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 // mockgen -source=api.go -destination api_mock.go -package eta
@@ -18,18 +19,18 @@ type ApiRequester interface {
 }
 
 type ApiRequestService struct {
-	httpTimeout int
+	httpClient http.Client
 }
 
 const (
-	defaultHttpTimeout = 1 // in seconds
+	defaultHttpTimeout = time.Duration(1 * time.Second)
 
 	carsPositionsEndpointURL = "https://dev-api.wheely.com/fake-eta/cars"
 	etasEndpointURL          = "https://dev-api.wheely.com/fake-eta/predict"
 )
 
 func NewApiRequestService() *ApiRequestService {
-	return &ApiRequestService{httpTimeout: defaultHttpTimeout}
+	return &ApiRequestService{httpClient: http.Client{Timeout: defaultHttpTimeout}}
 }
 
 func (s *ApiRequestService) FetchCarPositions(position Position, limit int) ([]Position, error) {
@@ -47,7 +48,7 @@ func (s *ApiRequestService) FetchCarPositions(position Position, limit int) ([]P
 
 	parsedUrl.RawQuery = query.Encode()
 
-	resp, err := http.Get(parsedUrl.String())
+	resp, err := s.httpClient.Get(parsedUrl.String())
 	if err != nil {
 		return positions, err
 	}
@@ -79,7 +80,7 @@ func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Positio
 		return etas, err
 	}
 
-	resp, err := http.Post(etasEndpointURL, "application/json; charset=utf-8", bytes.NewReader(requestPayloadBytes))
+	resp, err := s.httpClient.Post(etasEndpointURL, "application/json; charset=utf-8", bytes.NewReader(requestPayloadBytes))
 	if err != nil {
 		return etas, err
 	}
