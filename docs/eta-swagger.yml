@@ -1,0 +1,48 @@
+swagger: "2.0"
+
+info:
+  title: "Find minimum ETA service"
+  version: "1.0"
+
+basePath: /eta
+
+produces:
+- application/json
+
+consumes: 
+- application/json
+
+paths:
+  /:
+    get:
+      operationId: findMinEta
+      description: Calculate the minimum car arrival time in minutes(ETA) for the target position.
+      parameters:
+      - name: lat
+        in: query
+        type: number
+        format: float64
+        required: true
+        minimum: -90.0
+        maximum: 90.0
+        description: Latitude
+      - name: lng
+        in: query
+        type: number
+        format: float64
+        required: true
+        minimum: -180.0
+        maximum: 180.0
+        description: Longitude
+
+      responses:
+        200:
+          description: Minimum number of minutes (ETA)
+          schema: 
+            type: number
+            format: int
+        422:
+          description: |
+            Unprocessable Entity. Invalid passed params or empty results by passed params from 3rd-party services.
+        '5XX':
+          description: Unexpected error.        

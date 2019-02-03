@@ -11,4 +11,4 @@ GO111MODULE=on go test ./...
 ```
 
 ## API description
-[./docs/eta.yml](./docs/eta.yml)
+[./docs/eta-swagger.yml](./docs/eta-swagger.yml)
