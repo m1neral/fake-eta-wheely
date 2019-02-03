@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	eta "github.com/m1neral/fake-eta-wheelly"
+	eta "github.com/m1neral/fake-eta-wheely"
 )
 
 const (

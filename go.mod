@@ -1,4 +1,4 @@
-module github.com/m1neral/fake-eta-wheelly
+module github.com/m1neral/fake-eta-wheely
 
 require (
 	github.com/golang/mock v1.2.0
