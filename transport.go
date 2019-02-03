@@ -1,4 +1,4 @@
-package main
+package eta
 
 import (
 	"encoding/json"
@@ -10,10 +10,8 @@ import (
 )
 
 const (
-	minLat = -90.0
-	maxLat = 90.0
-	minLng = -180.0
-	maxLng = 180.0
+	minLat, maxLat = -90.0, 90.0
+	minLng, maxLng = -180.0, 180.0
 )
 
 var (
@@ -80,18 +78,16 @@ func validatedParams(r *http.Request) (float64, float64, error) {
 
 func handleError(w http.ResponseWriter, err error) {
 	switch err {
-	case ErrFetchCarsPositions:
-		http.Error(w, "couldn't fetch car positions", http.StatusServiceUnavailable)
-	case ErrFetchEtas:
-		http.Error(w, "couldn't fetch etas", http.StatusServiceUnavailable)
+	case ErrFetchCarsPositions, ErrFetchEtas:
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	case ErrValidatedParams:
-		errText := fmt.Sprintf(
-			"Passed params incorrect: lat is required and value should be from %v to %v; lng is required and value should be from %v to %v",
+		errMsg := fmt.Sprintf(
+			"Passed params are incorrect: lat is required and value should be from %v to %v; lng is required and value should be from %v to %v",
 			minLat, maxLat,
 			minLng, maxLng,
 		)
-		http.Error(w, errText, http.StatusUnprocessableEntity)
+		http.Error(w, errMsg, http.StatusUnprocessableEntity)
 	default:
-		http.Error(w, "internal errros", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

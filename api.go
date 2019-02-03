@@ -1,4 +1,4 @@
-package main
+package eta
 
 import (
 	"bytes"
@@ -10,17 +10,9 @@ import (
 	"strconv"
 )
 
-type FetchCarsPositionsResponse struct {
-	Positions []Position
-}
-
-type FetchEtasResponse struct {
-	Etas []Eta
-}
-
 type ApiRequester interface {
-	FetchCarPositions(position Position, limit int) (FetchCarsPositionsResponse, error)
-	FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error)
+	FetchCarPositions(position Position, limit int) ([]Position, error)
+	FetchEtas(position Position, carsPositions []Position) ([]Eta, error)
 }
 
 type ApiRequestService struct {
@@ -38,22 +30,22 @@ func NewApiRequestService() *ApiRequestService {
 	return &ApiRequestService{httpTimeout: defaultHttpTimeout}
 }
 
-func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (FetchCarsPositionsResponse, error) {
-	positions := FetchCarsPositionsResponse{}
+func (s *ApiRequestService) FetchCarPositions(position Position, limit int) ([]Position, error) {
+	positions := []Position{}
 
-	url, err := url.Parse(carsPositionsEndpointURL)
+	parsedUrl, err := url.Parse(carsPositionsEndpointURL)
 	if err != nil {
 		return positions, err
 	}
 
-	query := url.Query()
+	query := parsedUrl.Query()
 	query.Set("limit", strconv.Itoa(limit))
 	query.Set("lat", fmt.Sprintf("%f", position.Lat))
 	query.Set("lng", fmt.Sprintf("%f", position.Lng))
 
-	url.RawQuery = query.Encode()
+	parsedUrl.RawQuery = query.Encode()
 
-	resp, err := http.Get(url.String())
+	resp, err := http.Get(parsedUrl.String())
 	if err != nil {
 		return positions, err
 	}
@@ -63,7 +55,7 @@ func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (Fet
 		return positions, err
 	}
 
-	err = json.Unmarshal(body, &positions.Positions)
+	err = json.Unmarshal(body, &positions)
 	if err != nil {
 		return positions, err
 	}
@@ -76,8 +68,8 @@ type fetchEtasRequest struct {
 	Source []Position `json:"source"`
 }
 
-func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error) {
-	etas := FetchEtasResponse{}
+func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Position) ([]Eta, error) {
+	etas := []Eta{}
 	requestPayload := fetchEtasRequest{Target: position, Source: carsPositions}
 
 	requestPayloadBytes, err := json.Marshal(requestPayload)
@@ -95,7 +87,7 @@ func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Positio
 		return etas, err
 	}
 
-	err = json.Unmarshal(body, &etas.Etas)
+	err = json.Unmarshal(body, &etas)
 	if err != nil {
 		return etas, err
 	}

@@ -1,4 +1,4 @@
-package main
+package eta
 
 import (
 	"errors"
@@ -45,18 +45,18 @@ func (s *EtaService) FindMinEta(targetPosition Position) (Eta, error) {
 func (s *EtaService) getEtas(position Position, carsPositions []Position) ([]Eta, error) {
 	resp, err := s.apiRequest.FetchEtas(position, carsPositions)
 	if err != nil {
-		return resp.Etas, ErrFetchEtas
+		return resp, ErrFetchEtas
 	}
-	return resp.Etas, nil
+	return resp, nil
 }
 
 func (s *EtaService) getCarPositions(position Position) ([]Position, error) {
 	resp, err := s.apiRequest.FetchCarPositions(position, s.limitCars)
 	if err != nil {
-		return resp.Positions, ErrFetchCarsPositions
+		return resp, ErrFetchCarsPositions
 	}
 
-	return resp.Positions, err
+	return resp, err
 }
 
 func (s *EtaService) min(values []Eta) (Eta, error) {

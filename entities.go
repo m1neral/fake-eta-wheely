@@ -1,4 +1,4 @@
-package main
+package eta
 
 type Eta int
 
