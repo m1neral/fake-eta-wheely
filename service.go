@@ -34,7 +34,7 @@ func (s *EtaService) FindMinEta(targetPosition Position) (Eta, error) {
 		return 0, err
 	}
 
-	minEta, err := min(etas)
+	minEta, err := s.min(etas)
 	if err != nil {
 		return 0, ErrInternal
 	}
@@ -57,4 +57,20 @@ func (s *EtaService) getCarPositions(position Position) ([]Position, error) {
 	}
 
 	return resp.Positions, err
+}
+
+func (s *EtaService) min(values []Eta) (Eta, error) {
+	if len(values) == 0 {
+		return 0, errors.New("cannot detect a minimum value in an empty slice")
+	}
+
+	minValue := values[0]
+
+	for _, v := range values {
+		if v < minValue {
+			minValue = v
+		}
+	}
+
+	return minValue, nil
 }
