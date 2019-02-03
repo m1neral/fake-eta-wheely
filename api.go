@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,17 +10,21 @@ import (
 	"strconv"
 )
 
-type FetchCarPositionsResponse struct {
+type FetchCarsPositionsResponse struct {
 	Positions []Position
 }
 
+type FetchEtasRequest struct {
+	Target Position   `json:"target"`
+	Source []Position `json:"source"`
+}
+
 type FetchEtasResponse struct {
-	Target Position
-	Source []Position
+	Etas []Eta
 }
 
 type ApiRequester interface {
-	FetchCarPositions(position Position, limit int) (FetchCarPositionsResponse, error)
+	FetchCarPositions(position Position, limit int) (FetchCarsPositionsResponse, error)
 	FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error)
 }
 
@@ -29,28 +34,28 @@ type ApiRequestService struct {
 
 const (
 	defaultHttpTimeout = 1 // in seconds
-	carPositionsLimit  = 100
+	carsPositionsLimit = 100
 
-	carPositionsEndpointURL = "https://dev-api.wheely.com/fake-eta/cars"
-	etasEndpointURL         = "https://dev-api.wheely.com/fake-eta/predict"
+	carsPositionsEndpointURL = "https://dev-api.wheely.com/fake-eta/cars"
+	etasEndpointURL          = "https://dev-api.wheely.com/fake-eta/predict"
 )
 
 func NewApiRequestService() *ApiRequestService {
 	return &ApiRequestService{httpTimeout: defaultHttpTimeout}
 }
 
-func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (FetchCarPositionsResponse, error) {
-	positions := FetchCarPositionsResponse{}
+func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (FetchCarsPositionsResponse, error) {
+	positions := FetchCarsPositionsResponse{}
 
-	url, err := url.Parse(carPositionsEndpointURL)
+	url, err := url.Parse(carsPositionsEndpointURL)
 	if err != nil {
 		return positions, err
 	}
 
 	query := url.Query()
-	query.Set("limit", strconv.Itoa(carPositionsLimit))
-	query.Set("lat", fmt.Sprintf("%f", lat))
-	query.Set("lng", fmt.Sprintf("%f", lng))
+	query.Set("limit", strconv.Itoa(carsPositionsLimit))
+	query.Set("lat", fmt.Sprintf("%f", position.Lat))
+	query.Set("lng", fmt.Sprintf("%f", position.Lng))
 
 	url.RawQuery = query.Encode()
 
@@ -73,5 +78,28 @@ func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (Fet
 }
 
 func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error) {
-	return FetchEtasResponse{}, nil
+	etas := FetchEtasResponse{}
+	requestPayload := FetchEtasRequest{Target: position, Source: carsPositions}
+
+	requestPayloadBytes, err := json.Marshal(requestPayload)
+	if err != nil {
+		return etas, err
+	}
+
+	resp, err := http.Post(etasEndpointURL, "application/json; charset=utf-8", bytes.NewReader(requestPayloadBytes))
+	if err != nil {
+		return etas, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return etas, err
+	}
+
+	err = json.Unmarshal(body, &etas.Etas)
+	if err != nil {
+		return etas, err
+	}
+
+	return etas, nil
 }
