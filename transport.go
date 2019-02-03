@@ -17,13 +17,7 @@ const (
 )
 
 var (
-	ErrValidatedParams = errors.New(
-		fmt.Sprintf(
-			"Passed params incorrect: lat is required and value should be from %v to %v; lng is required and value should be from %v to %v",
-			minLat, maxLat,
-			minLng, maxLng,
-		),
-	)
+	ErrValidatedParams = errors.New("invalid params")
 )
 
 func MakeHandler(service *EtaService, logger *log.Logger) func(w http.ResponseWriter, r *http.Request) {
@@ -87,12 +81,17 @@ func validatedParams(r *http.Request) (float64, float64, error) {
 func handleError(w http.ResponseWriter, err error) {
 	switch err {
 	case ErrFetchCarsPositions:
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, "couldn't fetch car positions", http.StatusServiceUnavailable)
 	case ErrFetchEtas:
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, "couldn't fetch etas", http.StatusServiceUnavailable)
 	case ErrValidatedParams:
-		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		errText := fmt.Sprintf(
+			"Passed params incorrect: lat is required and value should be from %v to %v; lng is required and value should be from %v to %v",
+			minLat, maxLat,
+			minLng, maxLng,
+		)
+		http.Error(w, errText, http.StatusUnprocessableEntity)
 	default:
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "internal errros", http.StatusInternalServerError)
 	}
 }

@@ -14,11 +14,6 @@ type FetchCarsPositionsResponse struct {
 	Positions []Position
 }
 
-type FetchEtasRequest struct {
-	Target Position   `json:"target"`
-	Source []Position `json:"source"`
-}
-
 type FetchEtasResponse struct {
 	Etas []Eta
 }
@@ -34,7 +29,6 @@ type ApiRequestService struct {
 
 const (
 	defaultHttpTimeout = 1 // in seconds
-	carsPositionsLimit = 100
 
 	carsPositionsEndpointURL = "https://dev-api.wheely.com/fake-eta/cars"
 	etasEndpointURL          = "https://dev-api.wheely.com/fake-eta/predict"
@@ -53,7 +47,7 @@ func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (Fet
 	}
 
 	query := url.Query()
-	query.Set("limit", strconv.Itoa(carsPositionsLimit))
+	query.Set("limit", strconv.Itoa(limit))
 	query.Set("lat", fmt.Sprintf("%f", position.Lat))
 	query.Set("lng", fmt.Sprintf("%f", position.Lng))
 
@@ -77,9 +71,14 @@ func (s *ApiRequestService) FetchCarPositions(position Position, limit int) (Fet
 	return positions, nil
 }
 
+type fetchEtasRequest struct {
+	Target Position   `json:"target"`
+	Source []Position `json:"source"`
+}
+
 func (s *ApiRequestService) FetchEtas(position Position, carsPositions []Position) (FetchEtasResponse, error) {
 	etas := FetchEtasResponse{}
-	requestPayload := FetchEtasRequest{Target: position, Source: carsPositions}
+	requestPayload := fetchEtasRequest{Target: position, Source: carsPositions}
 
 	requestPayloadBytes, err := json.Marshal(requestPayload)
 	if err != nil {
